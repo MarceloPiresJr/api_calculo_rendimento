@@ -12,7 +12,7 @@ class RendimentoCalculator:
     - Período de tempo (data inicial até data final)
     """
     
-    def __init__(self, valor_inicial, aporte_mensal, ano_final, mes_final, taxa_cdi, data_inicial=None):
+    def __init__(self, valor_inicial, aporte_mensal, ano_final, mes_final, taxa_cdi_anual, data_inicial=None):
         """
         Inicializa a calculadora de rendimentos.
         
@@ -21,14 +21,14 @@ class RendimentoCalculator:
             aporte_mensal (float): Valor a ser aportado mensalmente
             ano_final (int): Ano final para o cálculo
             mes_final (int): Mês final para o cálculo (1-12)
-            taxa_cdi (float): Taxa de CDI mensal em percentual (ex: 0.5 para 0.5%)
+            taxa_cdi_anual (float): Taxa de CDI anual em percentual (ex: 0.5 para 0.5%)
             data_inicial (datetime, opcional): Data inicial do cálculo. Se None, usa a data atual.
         """
         self.valor_inicial = valor_inicial
         self.aporte_mensal = aporte_mensal
         self.ano_final = ano_final
         self.mes_final = mes_final
-        self.taxa_cdi = taxa_cdi / 100  # Converte a taxa para decimal
+        self.taxa_cdi_anual = taxa_cdi_anual / 100 / 12  # Converte a taxa anual para mensal
         self.data_inicial = data_inicial or datetime.today()
         self.reset()
     
@@ -62,7 +62,7 @@ class RendimentoCalculator:
                 self.saldo += self.aporte_mensal
             
             # Aplica o rendimento mensal baseado no CDI
-            rendimento = self.saldo * self.taxa_cdi
+            rendimento = self.saldo * self.taxa_cdi_anual
             self.saldo += rendimento
             self.total_rendimento += rendimento
             

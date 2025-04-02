@@ -6,7 +6,7 @@ class RendimentoRequest(BaseModel):
     aporte_mensal: float
     ano_final: int
     mes_final: int
-    taxa_cdi: float
+    taxa_cdi_anual: float
 
 class InformeDeRendimento(BaseModel):
     mes_ano: str

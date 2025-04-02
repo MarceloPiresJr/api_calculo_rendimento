@@ -19,16 +19,20 @@ class RendimentoService:
             aporte_mensal=request.aporte_mensal,
             ano_final=request.ano_final,
             mes_final=request.mes_final,
-            taxa_cdi=request.taxa_cdi
+            taxa_cdi_anual=request.taxa_cdi_anual
         )
         
         resultado, total_rendimento = calculadora.calcular()
         informe_de_rendimento = RendimentoService.gerar_informe_de_rendimento(resultado)
 
+        # Cálculo do número total de meses
+        data_atual = datetime.today()
+        numero_meses = ((request.ano_final - data_atual.year) * 12) + request.mes_final - data_atual.month
+
         return RendimentoResponse(
             informe_de_rendimento=informe_de_rendimento,
             total_rendimento=round(total_rendimento, 2),
-            valor_total_aplicado=round(request.valor_inicial + (request.aporte_mensal * (request.ano_final - 2023) * 12), 2)
+            valor_total_aplicado=round(request.valor_inicial + (request.aporte_mensal * numero_meses), 2)
         )
 
     @staticmethod
@@ -39,7 +43,7 @@ class RendimentoService:
             raise ValueError("O aporte mensal não pode ser negativo.")
         if request.mes_final < 1 or request.mes_final > 12:
             raise ValueError("O mês deve estar entre 1 e 12.")
-        if request.taxa_cdi < 0:
+        if request.taxa_cdi_anual < 0:
             raise ValueError("A taxa de CDI não pode ser negativa.")
 
     @staticmethod
