@@ -1,8 +1,13 @@
 from fastapi import FastAPI, HTTPException, Response, status
 from typing import Dict, Any
 
-from .models import RendimentoRequest, RendimentoResponse
-from .services import RendimentoService
+from app.dtos import (
+    CalculoRendimentoRequestDTO,
+    CalculoRendimentoResponseDTO,
+    TaxaCDIResponseDTO
+)
+from app.domain.converters import DTOConverter
+from app.services import RendimentoService
 from services.cdi_service import CDIService
 
 # Configuração da aplicação FastAPI
@@ -15,11 +20,11 @@ app = FastAPI(
 
 @app.post(
     "/calcular_rendimento", 
-    response_model=RendimentoResponse,
+    response_model=CalculoRendimentoResponseDTO,
     summary="Calcula rendimentos de investimento",
     status_code=status.HTTP_200_OK
 )
-async def calcular_rendimento(request: RendimentoRequest) -> RendimentoResponse:
+async def calcular_rendimento(request_dto: CalculoRendimentoRequestDTO) -> CalculoRendimentoResponseDTO:
     """
     Calcula o rendimento de um investimento com base nos parâmetros fornecidos.
     
@@ -31,17 +36,24 @@ async def calcular_rendimento(request: RendimentoRequest) -> RendimentoResponse:
     - **taxa_cdi_anual**: (Opcional) Taxa de CDI anual. Se não fornecida, usa a taxa atual.
     
     Returns:
-        RendimentoResponse: Detalhes do cálculo, incluindo o informe mensal e totais
+        CalculoRendimentoResponseDTO: Detalhes do cálculo, incluindo o informe mensal e totais
     """
     try:
-        return RendimentoService.calcular_rendimento(request)
+        # Converte DTO para modelo de domínio
+        parametros_calculo = DTOConverter.to_parametros_calculo(request_dto)
+        
+        # Executa o cálculo usando o serviço de domínio
+        resultado = RendimentoService.calcular_rendimento(parametros_calculo)
+        
+        # Converte resultado do domínio para DTO de resposta
+        return DTOConverter.to_calculo_response(resultado)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=str(e)
         )
     except Exception as e:
-        # Log do erro (em um sistema de produção)
+        # Em um sistema real, registraria o erro em log
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erro interno ao processar a solicitação"
@@ -51,21 +63,21 @@ async def calcular_rendimento(request: RendimentoRequest) -> RendimentoResponse:
 @app.get(
     "/cdi_atual",
     summary="Obtém a taxa CDI atual",
-    response_model=Dict[str, float],
+    response_model=TaxaCDIResponseDTO,
     status_code=status.HTTP_200_OK
 )
-async def obter_cdi_atual() -> Dict[str, float]:
+async def obter_cdi_atual() -> TaxaCDIResponseDTO:
     """
     Retorna o valor atual da taxa CDI anual em percentual.
     
     O valor é obtido da API do Banco Central do Brasil e atualizado diariamente.
     
     Returns:
-        Dict: Contendo a chave "cdi_anual" com o valor da taxa
+        TaxaCDIResponseDTO: Informações sobre a taxa CDI atual
     """
     try:
         valor_cdi = CDIService.obter_cdi_anual()
-        return {"cdi_anual": valor_cdi}
+        return DTOConverter.to_cdi_response(valor_cdi)
     except Exception as e:
         # Em um sistema de produção, registraria o erro em log
         raise HTTPException(
