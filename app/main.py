@@ -1,7 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-
-# Agora o import funcionará tanto quando executado como script quanto como módulo
 from app.controllers import app as api_app
 
 if __name__ == "__main__":

@@ -4,40 +4,35 @@
 # DTOs de Rendimento
 from app.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO,
+    CalculoRendimentoResponseDTO,
     InformeRendimentoDTO,
-    CalculoRendimentoResponseDTO
+    CalculoJurosSaqueRequestDTO,
+    CalculoJurosSaqueResponseDTO,
+    InformeJurosSaqueDTO
 )
 
 # DTOs de CDI
 from app.dtos.cdi_dtos import (
-    TaxaCDIResponseDTO,
-    HistoricoCDIItemDTO,
-    HistoricoCDIResponseDTO
+    TaxaCDIResponseDTO
 )
 
 # DTOs comuns/utilitários
 from app.dtos.common_dtos import (
-    StatusEnum,
-    MensagemResponseDTO,
     ErroResponseDTO,
+    MensagemResponseDTO,
     PaginacaoDTO
 )
 
-# Exporta todos os DTOs para facilitar a importação
+# Exportação explícita de símbolos
 __all__ = [
-    # Rendimento
     'CalculoRendimentoRequestDTO',
-    'InformeRendimentoDTO',
     'CalculoRendimentoResponseDTO',
-    
-    # CDI
+    'InformeRendimentoDTO',
+    'CalculoJurosSaqueRequestDTO', 
+    'CalculoJurosSaqueResponseDTO',
+    'InformeJurosSaqueDTO',
     'TaxaCDIResponseDTO',
-    'HistoricoCDIItemDTO',
-    'HistoricoCDIResponseDTO',
-    
-    # Comuns
-    'StatusEnum',
-    'MensagemResponseDTO',
     'ErroResponseDTO',
+    'MensagemResponseDTO',
     'PaginacaoDTO'
 ] 

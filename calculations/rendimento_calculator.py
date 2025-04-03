@@ -10,6 +10,13 @@ class ResultadoMensal:
     rendimento: float
 
 
+@dataclass
+class ResultadoJurosSaque:
+    data: str
+    saldo: float
+    juros_saque: float
+
+
 class RendimentoCalculator:
     """
     Classe responsável pelo cálculo de rendimentos com base no CDI.
@@ -114,6 +121,74 @@ class RendimentoCalculator:
             ano += 1
             
         return datetime(ano, mes, 1)
+    
+    def calcular_juros_saque(self, taxa_juros_mensal: float = 1.0) -> Tuple[List[Tuple[str, float, float]], float]:
+        """
+        Calcula os juros que seriam pagos para sacar o dinheiro a cada mês.
+        
+        Esta implementação considera que o aporte mensal é aplicado junto com o valor inicial
+        no primeiro mês, e depois mensalmente nos meses subsequentes.
+        
+        Args:
+            taxa_juros_mensal: Taxa mensal de juros para saque em percentual (padrão: 1%)
+            
+        Returns:
+            Tupla contendo:
+                - Lista de tuplas (mês/ano, saldo, juros de saque mensal)
+                - Valor total de juros de saque no período
+        """
+        # Reset os valores para um novo cálculo
+        self.saldo = self.valor_inicial
+        
+        # Adiciona o aporte mensal ao saldo inicial conforme expectativa do usuário
+        self.saldo += self.aporte_mensal
+        
+        # Valida as datas
+        self._validar_datas()
+        
+        data_atual = self.data_inicial
+        
+        # Lista para armazenar os resultados de juros de saque
+        historico_juros_saque = []
+        
+        # Total de juros que seriam pagos no período
+        total_juros_saque = 0.0
+        
+        # Converte a taxa de juros para decimal
+        taxa_juros_decimal = taxa_juros_mensal / 100
+        
+        while data_atual <= self.data_final:
+            # Aplica o rendimento mensal
+            rendimento = self.saldo * self.taxa_cdi_mensal
+            self.saldo += rendimento
+            
+            # Arredonda o saldo para 2 casas decimais
+            self.saldo = round(self.saldo, 2)
+            
+            # Calcula os juros de saque sobre o saldo atualizado
+            juros_saque_mensal = self.saldo * taxa_juros_decimal
+            juros_saque_mensal = round(juros_saque_mensal, 2)
+            total_juros_saque += juros_saque_mensal
+            
+            # Armazena os dados do mês
+            mes_ano = data_atual.strftime('%m/%Y')
+            historico_juros_saque.append((
+                mes_ano,
+                self.saldo,
+                juros_saque_mensal
+            ))
+            
+            # Avança para o próximo mês
+            data_atual = self._avancar_para_proximo_mes(data_atual)
+            
+            # Adiciona o aporte mensal para o próximo mês
+            if data_atual <= self.data_final:
+                self.saldo += self.aporte_mensal
+        
+        # Arredonda o total de juros para 2 casas decimais
+        total_juros_saque = round(total_juros_saque, 2)
+        
+        return historico_juros_saque, total_juros_saque
     
     def obter_saldo_final(self) -> float:
         """Retorna o saldo final após o cálculo."""

@@ -6,8 +6,10 @@ from typing import List, Tuple
 from services.cdi_service import CDIService
 from app.domain.models import (
     ParametrosCalculoRendimento,
+    ParametrosCalculoJurosSaque,
     InformeRendimentoMensal,
-    ResultadoCalculoRendimento
+    ResultadoCalculoRendimento,
+    ResultadoCalculoJurosSaque
 )
 from app.domain.converters import DTOConverter
 
@@ -63,7 +65,51 @@ class RendimentoService:
             informes_mensais=informes_mensais,
             total_rendimento=total_rendimento,
             valor_total_aplicado=valor_total_aplicado,
-            taxa_cdi_utilizada=parametros.taxa_cdi_anual
+            taxa_cdi_utilizada=parametros.taxa_cdi_anual,
+            percentual_sobre_cdi=parametros.percentual_sobre_cdi
+        )
+
+    @staticmethod
+    def calcular_juros_saque(parametros: ParametrosCalculoJurosSaque) -> ResultadoCalculoJurosSaque:
+        """
+        Realiza o cálculo dos juros que seriam pagos para sacar o dinheiro.
+        
+        Args:
+            parametros: Parâmetros para o cálculo de juros de saque
+            
+        Returns:
+            Objeto de resultado com os dados calculados
+            
+        Raises:
+            ValueError: Se algum parâmetro for inválido
+        """
+        # Validação dos dados
+        RendimentoService._validar_parametros(parametros)
+        
+        # Complementa a taxa CDI se não fornecida
+        if parametros.taxa_cdi_anual is None:
+            parametros.taxa_cdi_anual = CDIService.obter_cdi_anual()
+        
+        # Calcula os rendimentos e os juros de saque
+        calculadora = RendimentoService._criar_calculadora(parametros)
+        tuplas_resultado, total_juros_saque = calculadora.calcular_juros_saque(
+            taxa_juros_mensal=parametros.taxa_juros_saque
+        )
+        
+        # Converte tuplas em objetos de domínio
+        informes_mensais = DTOConverter.tuplas_to_informes_juros_saque(tuplas_resultado)
+        
+        # Calcula valor total aplicado
+        valor_total_aplicado = RendimentoService._calcular_valor_total_aplicado(parametros)
+        
+        # Cria e retorna o resultado
+        return ResultadoCalculoJurosSaque(
+            informes_mensais=informes_mensais,
+            total_juros_saque=total_juros_saque,
+            valor_total_aplicado=valor_total_aplicado,
+            taxa_cdi_utilizada=parametros.taxa_cdi_anual,
+            percentual_sobre_cdi=parametros.percentual_sobre_cdi,
+            taxa_juros_saque=parametros.taxa_juros_saque
         )
 
     @staticmethod
@@ -85,6 +131,13 @@ class RendimentoService:
             raise ValueError("O mês deve estar entre 1 e 12.")
         if parametros.taxa_cdi_anual is not None and parametros.taxa_cdi_anual < 0:
             raise ValueError("A taxa de CDI não pode ser negativa.")
+        if parametros.percentual_sobre_cdi < 0:
+            raise ValueError("O percentual sobre CDI não pode ser negativo.")
+        
+        # Validações adicionais para parâmetros de juros de saque
+        if isinstance(parametros, ParametrosCalculoJurosSaque):
+            if parametros.taxa_juros_saque < 0:
+                raise ValueError("A taxa de juros de saque não pode ser negativa.")
         
         data_atual = datetime.today()
         if parametros.ano_final < data_atual.year or (
@@ -103,12 +156,15 @@ class RendimentoService:
         Returns:
             Calculadora inicializada
         """
+        # Calcula a taxa efetiva considerando o percentual sobre CDI
+        taxa_efetiva = parametros.taxa_cdi_anual * (parametros.percentual_sobre_cdi / 100.0)
+        
         return RendimentoCalculator(
             valor_inicial=parametros.valor_inicial,
             aporte_mensal=parametros.aporte_mensal,
             ano_final=parametros.ano_final,
             mes_final=parametros.mes_final,
-            taxa_cdi_anual=parametros.taxa_cdi_anual,
+            taxa_cdi_anual=taxa_efetiva,
             data_inicial=parametros.data_inicial
         )
 

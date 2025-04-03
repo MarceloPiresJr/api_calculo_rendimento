@@ -4,6 +4,8 @@ from typing import Dict, Any
 from app.dtos import (
     CalculoRendimentoRequestDTO,
     CalculoRendimentoResponseDTO,
+    CalculoJurosSaqueRequestDTO,
+    CalculoJurosSaqueResponseDTO,
     TaxaCDIResponseDTO
 )
 from app.domain.converters import DTOConverter
@@ -47,6 +49,49 @@ async def calcular_rendimento(request_dto: CalculoRendimentoRequestDTO) -> Calcu
         
         # Converte resultado do domínio para DTO de resposta
         return DTOConverter.to_calculo_response(resultado)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )
+    except Exception as e:
+        # Em um sistema real, registraria o erro em log
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro interno ao processar a solicitação"
+        )
+
+
+@app.post(
+    "/calcular_juros_saque", 
+    response_model=CalculoJurosSaqueResponseDTO,
+    summary="Calcula juros de saque",
+    status_code=status.HTTP_200_OK
+)
+async def calcular_juros_saque(request_dto: CalculoJurosSaqueRequestDTO) -> CalculoJurosSaqueResponseDTO:
+    """
+    Calcula os juros que seriam pagos para sacar o dinheiro a cada mês.
+    
+    Parameters:
+    - **valor_inicial**: Valor inicial do investimento
+    - **aporte_mensal**: Valor aportado mensalmente
+    - **ano_final**: Ano final para o cálculo
+    - **mes_final**: Mês final para o cálculo (1-12)
+    - **taxa_cdi_anual**: (Opcional) Taxa de CDI anual. Se não fornecida, usa a taxa atual.
+    - **taxa_juros_saque**: (Opcional) Taxa mensal de juros para saque em percentual (padrão: 1%)
+    
+    Returns:
+        CalculoJurosSaqueResponseDTO: Detalhes do cálculo, incluindo o informe mensal e totais de juros de saque
+    """
+    try:
+        # Converte DTO para modelo de domínio
+        parametros_calculo = DTOConverter.to_parametros_juros_saque(request_dto)
+        
+        # Executa o cálculo usando o serviço de domínio
+        resultado = RendimentoService.calcular_juros_saque(parametros_calculo)
+        
+        # Converte resultado do domínio para DTO de resposta
+        return DTOConverter.to_juros_saque_response(resultado)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 

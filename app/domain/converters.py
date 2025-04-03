@@ -4,14 +4,20 @@ from typing import List
 from app.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO, 
     CalculoRendimentoResponseDTO,
-    InformeRendimentoDTO
+    InformeRendimentoDTO,
+    CalculoJurosSaqueRequestDTO,
+    CalculoJurosSaqueResponseDTO,
+    InformeJurosSaqueDTO
 )
 from app.dtos.cdi_dtos import TaxaCDIResponseDTO
 
 from app.domain.models import (
     ParametrosCalculoRendimento,
+    ParametrosCalculoJurosSaque,
     InformeRendimentoMensal,
-    ResultadoCalculoRendimento
+    InformeJurosSaqueMensal,
+    ResultadoCalculoRendimento,
+    ResultadoCalculoJurosSaque
 )
 
 
@@ -37,7 +43,29 @@ class DTOConverter:
             aporte_mensal=dto.aporte_mensal,
             ano_final=dto.ano_final,
             mes_final=dto.mes_final,
-            taxa_cdi_anual=dto.taxa_cdi_anual
+            taxa_cdi_anual=dto.taxa_cdi_anual,
+            percentual_sobre_cdi=dto.percentual_sobre_cdi or 100.0
+        )
+    
+    @staticmethod
+    def to_parametros_juros_saque(dto: CalculoJurosSaqueRequestDTO) -> ParametrosCalculoJurosSaque:
+        """
+        Converte um DTO de requisição para o modelo de parâmetros de cálculo de juros de saque.
+        
+        Args:
+            dto: DTO da requisição de cálculo de juros
+            
+        Returns:
+            Modelo de domínio com os parâmetros de cálculo de juros
+        """
+        return ParametrosCalculoJurosSaque(
+            valor_inicial=dto.valor_inicial,
+            aporte_mensal=dto.aporte_mensal,
+            ano_final=dto.ano_final,
+            mes_final=dto.mes_final,
+            taxa_cdi_anual=dto.taxa_cdi_anual,
+            percentual_sobre_cdi=dto.percentual_sobre_cdi or 100.0,
+            taxa_juros_saque=dto.taxa_juros_saque or 1.0
         )
     
     @staticmethod
@@ -67,7 +95,40 @@ class DTOConverter:
             total_rendimento=round(resultado.total_rendimento, 2),
             valor_total_aplicado=round(resultado.valor_total_aplicado, 2),
             taxa_cdi_utilizada=resultado.taxa_cdi_utilizada,
-            data_calculo=resultado.data_calculo
+            percentual_sobre_cdi=resultado.percentual_sobre_cdi,
+            data_calculo=resultado.data_calculo_formatada
+        )
+    
+    @staticmethod
+    def to_juros_saque_response(resultado: ResultadoCalculoJurosSaque) -> CalculoJurosSaqueResponseDTO:
+        """
+        Converte um resultado de cálculo de juros de saque do domínio para o DTO de resposta da API.
+        
+        Args:
+            resultado: Resultado de cálculo de juros de saque do domínio
+            
+        Returns:
+            DTO formatado para resposta da API
+        """
+        # Converte informes mensais
+        informes_dto = [
+            InformeJurosSaqueDTO(
+                mes_ano=informe.mes_ano_formatado,
+                valor_total=round(informe.saldo, 2),
+                juros_saque_mensal=round(informe.juros_saque, 2)
+            )
+            for informe in resultado.informes_mensais
+        ]
+        
+        # Monta o DTO de resposta
+        return CalculoJurosSaqueResponseDTO(
+            informe_mensal=informes_dto,
+            total_juros_saque=round(resultado.total_juros_saque, 2),
+            valor_total_aplicado=round(resultado.valor_total_aplicado, 2),
+            taxa_cdi_utilizada=resultado.taxa_cdi_utilizada,
+            percentual_sobre_cdi=resultado.percentual_sobre_cdi,
+            taxa_juros_saque=resultado.taxa_juros_saque,
+            data_calculo=resultado.data_calculo_formatada
         )
     
     @staticmethod
@@ -110,6 +171,35 @@ class DTOConverter:
                 data=data,
                 saldo=saldo,
                 rendimento=rendimento
+            )
+            
+            informes.append(informe)
+            
+        return informes
+    
+    @staticmethod
+    def tuplas_to_informes_juros_saque(
+        tuplas_resultado: List[tuple]
+    ) -> List[InformeJurosSaqueMensal]:
+        """
+        Converte as tuplas de resultado do calculador para objetos de domínio de juros de saque.
+        
+        Args:
+            tuplas_resultado: Lista de tuplas (mes_ano, saldo, juros_saque)
+            
+        Returns:
+            Lista de objetos InformeJurosSaqueMensal
+        """
+        informes = []
+        
+        for mes_ano, saldo, juros_saque in tuplas_resultado:
+            mes, ano = map(int, mes_ano.split('/'))
+            data = datetime(ano, mes, 1)
+            
+            informe = InformeJurosSaqueMensal(
+                data=data,
+                saldo=saldo,
+                juros_saque=juros_saque
             )
             
             informes.append(informe)
