@@ -46,4 +46,4 @@ class ResultadoCalculoRendimento:
     
     def __post_init__(self):
         if self.data_calculo is None:
-            self.data_calculo = datetime.now().strftime("%d-%m-%Y") 
+            self.data_calculo = datetime.now() 
