@@ -1,0 +1,93 @@
+# API de Cálculo de Rendimento
+
+API para cálculo de rendimentos financeiros baseados na taxa CDI, implementada com Clean Architecture.
+
+## Estrutura do Projeto
+
+O projeto segue os princípios de Clean Architecture e Clean Code:
+
+```
+src/
+├── application/             # Casos de uso da aplicação
+├── domain/                  # Regras de negócio e entidades
+│   ├── entities/            # Entidades de domínio
+│   ├── services/            # Serviços de domínio
+│   └── value_objects/       # Objetos de valor
+├── infrastructure/          # Implementações concretas
+│   └── external/            # Serviços externos (BCB, etc)
+├── interfaces/              # Adaptadores de interface
+│   ├── api/                 # Interface da API
+│   │   └── dtos/            # DTOs da API
+│   └── converters/          # Conversores entre domínio e DTOs
+└── presentation/            # Camada de apresentação (FastAPI)
+
+docker/                      # Arquivos para containerização
+├── dockerfile               # Configuração do container
+└── docker-compose.yml       # Configuração do ambiente
+
+tests/                       # Testes automatizados
+├── unit/                    # Testes unitários
+└── integration/             # Testes de integração
+```
+
+### Camadas e Responsabilidades
+
+1. **Domain**: Contém as regras de negócio e entidades, independente de frameworks.
+2. **Application**: Contém os casos de uso da aplicação, orquestrando as entidades.
+3. **Infrastructure**: Implementações concretas de serviços externos.
+4. **Interfaces**: Adaptadores para comunicação entre camadas.
+5. **Presentation**: Configura a API e expõe os endpoints.
+
+## Funcionalidades
+
+- Cálculo de rendimento de investimento baseado em CDI
+- Cálculo de juros de saque antecipado
+- Consulta da taxa CDI atual do Banco Central
+
+## Requisitos
+
+- Python 3.8+
+- FastAPI
+- Uvicorn
+- Pydantic
+- Requests
+
+## Como Executar
+
+### Localmente
+
+1. Clone o repositório
+2. Instale as dependências:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Execute a aplicação:
+   ```
+   python main.py
+   ```
+   
+### Com Docker
+
+```
+cd docker
+docker-compose up
+```
+
+## Endpoints da API
+
+### Calcular Rendimento
+`POST /api/v1/calcular_rendimento`
+
+### Calcular Juros de Saque
+`POST /api/v1/calcular_juros_saque`
+
+### Obter CDI Atual
+`GET /api/v1/cdi_atual`
+
+### Health Check
+`GET /api/v1/health`
+
+## Acesso à Documentação
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc 

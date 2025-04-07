@@ -1,26 +1,24 @@
-from fastapi import FastAPI, HTTPException, Response, status
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, status
+from typing import Dict
 
-from app.dtos import (
+from src.interfaces.api.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO,
     CalculoRendimentoResponseDTO,
     CalculoJurosSaqueRequestDTO,
-    CalculoJurosSaqueResponseDTO,
-    TaxaCDIResponseDTO
+    CalculoJurosSaqueResponseDTO
 )
-from app.domain.converters import DTOConverter
-from app.services import RendimentoService
-from services.cdi_service import CDIService
+from src.interfaces.api.dtos.cdi_dtos import TaxaCDIResponseDTO
 
-# Configuração da aplicação FastAPI
-app = FastAPI(
-    title="API de Cálculo de Rendimentos",
-    description="API para cálculo de rendimentos financeiros com base em CDI",
-    version="1.0.0"
-)
+from src.interfaces.converters.dto_converters import DTOConverter
+from src.application.rendimento_use_case import RendimentoUseCase
+from src.application.juros_saque_use_case import JurosSaqueUseCase
+from src.infrastructure.external.bcb_service import CDIService
 
 
-@app.post(
+router = APIRouter(tags=["cálculos financeiros"])
+
+
+@router.post(
     "/calcular_rendimento", 
     response_model=CalculoRendimentoResponseDTO,
     summary="Calcula rendimentos de investimento",
@@ -44,8 +42,8 @@ async def calcular_rendimento(request_dto: CalculoRendimentoRequestDTO) -> Calcu
         # Converte DTO para modelo de domínio
         parametros_calculo = DTOConverter.to_parametros_calculo(request_dto)
         
-        # Executa o cálculo usando o serviço de domínio
-        resultado = RendimentoService.calcular_rendimento(parametros_calculo)
+        # Executa o cálculo usando o caso de uso
+        resultado = RendimentoUseCase.calcular_rendimento(parametros_calculo)
         
         # Converte resultado do domínio para DTO de resposta
         return DTOConverter.to_calculo_response(resultado)
@@ -62,7 +60,7 @@ async def calcular_rendimento(request_dto: CalculoRendimentoRequestDTO) -> Calcu
         )
 
 
-@app.post(
+@router.post(
     "/calcular_juros_saque", 
     response_model=CalculoJurosSaqueResponseDTO,
     summary="Calcula juros de saque",
@@ -87,8 +85,8 @@ async def calcular_juros_saque(request_dto: CalculoJurosSaqueRequestDTO) -> Calc
         # Converte DTO para modelo de domínio
         parametros_calculo = DTOConverter.to_parametros_juros_saque(request_dto)
         
-        # Executa o cálculo usando o serviço de domínio
-        resultado = RendimentoService.calcular_juros_saque(parametros_calculo)
+        # Executa o cálculo usando o caso de uso
+        resultado = JurosSaqueUseCase.calcular_juros_saque(parametros_calculo)
         
         # Converte resultado do domínio para DTO de resposta
         return DTOConverter.to_juros_saque_response(resultado)
@@ -105,7 +103,7 @@ async def calcular_juros_saque(request_dto: CalculoJurosSaqueRequestDTO) -> Calc
         )
 
 
-@app.get(
+@router.get(
     "/cdi_atual",
     summary="Obtém a taxa CDI atual",
     response_model=TaxaCDIResponseDTO,
@@ -131,8 +129,7 @@ async def obter_cdi_atual() -> TaxaCDIResponseDTO:
         )
 
 
-# Rotas adicionais para monitoramento e saúde da aplicação
-@app.get(
+@router.get(
     "/health",
     summary="Verifica a saúde da aplicação",
     status_code=status.HTTP_200_OK

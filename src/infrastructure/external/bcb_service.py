@@ -13,7 +13,7 @@ class CDIService:
     # Constantes
     BCB_API_URL = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/30?formato=json"
     TEMPO_VALIDADE_CACHE = timedelta(hours=24)
-    VALOR_CDI_PADRAO = 13.25  # Valor de fallback
+    VALOR_CDI_PADRAO = 13.25  # Valor de fallback caso a API não esteja disponível
     
     # Estrutura de cache
     _cache: Dict[str, Any] = {

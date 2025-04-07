@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 
-from app.dtos.rendimento_dtos import (
+from src.interfaces.api.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO, 
     CalculoRendimentoResponseDTO,
     InformeRendimentoDTO,
@@ -9,9 +9,9 @@ from app.dtos.rendimento_dtos import (
     CalculoJurosSaqueResponseDTO,
     InformeJurosSaqueDTO
 )
-from app.dtos.cdi_dtos import TaxaCDIResponseDTO
+from src.interfaces.api.dtos.cdi_dtos import TaxaCDIResponseDTO
 
-from app.domain.models import (
+from src.domain.entities.models import (
     ParametrosCalculoRendimento,
     ParametrosCalculoJurosSaque,
     InformeRendimentoMensal,

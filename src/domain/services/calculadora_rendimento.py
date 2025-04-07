@@ -1,36 +1,18 @@
 from datetime import datetime
-from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 
-@dataclass
-class ResultadoMensal:
-    data: str
-    saldo: float
-    rendimento: float
-
-
-@dataclass
-class ResultadoJurosSaque:
-    data: str
-    saldo: float
-    juros_saque: float
-
-
-class RendimentoCalculator:
+class CalculadoraRendimento:
     """
     Classe responsável pelo cálculo de rendimentos com base no CDI.
     
-    Esta classe calcula o rendimento de um investimento considerando:
-    - Um valor inicial
-    - Aportes mensais
-    - Taxa de CDI mensal
-    - Período de tempo (data inicial até data final)
+    Esta classe implementa a lógica principal de cálculos financeiros.
+    Segue o princípio de responsabilidade única, focando apenas na lógica de cálculo.
     """
     
     def __init__(self, valor_inicial: float, aporte_mensal: float, 
                  ano_final: int, mes_final: int, taxa_cdi_anual: float, 
-                 data_inicial: datetime = None):
+                 data_inicial: Optional[datetime] = None):
         """
         Inicializa a calculadora de rendimentos.
         
@@ -126,9 +108,6 @@ class RendimentoCalculator:
         """
         Calcula os juros que seriam pagos para sacar o dinheiro a cada mês.
         
-        Esta implementação considera que o aporte mensal é aplicado junto com o valor inicial
-        no primeiro mês, e depois mensalmente nos meses subsequentes.
-        
         Args:
             taxa_juros_mensal: Taxa mensal de juros para saque em percentual (padrão: 1%)
             
@@ -194,4 +173,4 @@ class RendimentoCalculator:
         """Retorna o saldo final após o cálculo."""
         if not self.historico:
             return self.valor_inicial
-        return self.historico[-1][1]
+        return self.historico[-1][1] 

@@ -13,7 +13,7 @@ class ParametrosCalculoRendimento:
     aporte_mensal: float
     ano_final: int
     mes_final: int
-    taxa_cdi_anual: float
+    taxa_cdi_anual: Optional[float] = None
     percentual_sobre_cdi: float = 100.0
     data_inicial: Optional[datetime] = None
 
@@ -69,7 +69,7 @@ class ResultadoCalculoRendimento:
     informes_mensais: List[InformeRendimentoMensal]
     total_rendimento: float
     valor_total_aplicado: float
-    data_calculo: datetime = None
+    data_calculo: Optional[datetime] = None
     
     def __post_init__(self):
         if self.data_calculo is None:
@@ -92,7 +92,7 @@ class ResultadoCalculoJurosSaque:
     informes_mensais: List[InformeJurosSaqueMensal]
     total_juros_saque: float
     valor_total_aplicado: float
-    data_calculo: datetime = None
+    data_calculo: Optional[datetime] = None
     
     def __post_init__(self):
         if self.data_calculo is None:
