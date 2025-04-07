@@ -26,12 +26,17 @@ def create_static_app():
     # Monta os arquivos estáticos da pasta web/assets
     static_app.mount("/assets", StaticFiles(directory="web/assets"), name="assets")
     
-    # Rota para a página inicial e qualquer outra rota
+    # Rota específica para a raiz
+    @static_app.get("/")
+    async def serve_root():
+        return FileResponse("web/index.html")
+    
+    # Rota para outros caminhos
     @static_app.get("/{full_path:path}")
-    async def serve_site(full_path: str = ""):
-        if full_path == "" or not os.path.exists(f"web/{full_path}"):
-            return FileResponse("web/index.html")
-        return FileResponse(f"web/{full_path}")
+    async def serve_site(full_path: str):
+        if os.path.exists(f"web/{full_path}"):
+            return FileResponse(f"web/{full_path}")
+        return FileResponse("web/index.html")
     
     return static_app
 
