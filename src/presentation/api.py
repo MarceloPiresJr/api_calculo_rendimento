@@ -22,7 +22,11 @@ def create_api() -> FastAPI:
     # Configuração de CORS para permitir requisições do frontend
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Em produção, isso deve ser restrito a origens específicas
+        allow_origins=[
+            "https://web-calculo-rendimento.onrender.com",  # URL específica do seu site
+            "http://localhost:8080",  # Para desenvolvimento local
+            "*"  # Opcional: permite todas as origens
+        ],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
