@@ -1,7 +1,14 @@
-from fastapi import FastAPI
+import uvicorn
+import os
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from src.interfaces.api.controllers import router as api_router
 
+# Obter o tipo de app da variável de ambiente
+app_type = os.environ.get("APP_TYPE", "api")
 
 def create_api() -> FastAPI:
     """
