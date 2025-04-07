@@ -335,34 +335,40 @@ function exportarCSV() {
         // Extrai dados do resultado
         const dados = dadosResultadoAtual.informe_mensal;
         
-        // Cria as linhas do CSV
-        let csvContent = 'data:text/csv;charset=utf-8,';
+        // Cria as linhas do CSV - usar BOM para garantir que o Excel reconheça o UTF-8
+        let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
         
         // Cabeçalho
         const colunaDinamica = isJurosSaque ? 'Juros de Saque' : 'Rendimento';
-        csvContent += `Mês/Ano,Valor Total,${colunaDinamica}\n`;
+        csvContent += `"Mês/Ano";"Valor Total";"${colunaDinamica}"\r\n`;
         
         // Dados
         dados.forEach(item => {
-            csvContent += `${item.mes_ano},${item.valor_total.toFixed(2)},${item[campoValor].toFixed(2)}\n`;
+            // Usar ponto e vírgula como separador e garantir que valores decimais usem vírgula
+            const valorTotal = item.valor_total.toFixed(2).replace('.', ',');
+            const valorDinamico = item[campoValor].toFixed(2).replace('.', ',');
+            csvContent += `"${item.mes_ano}";"${valorTotal}";"${valorDinamico}"\r\n`;
         });
         
+        // Linha em branco antes do resumo
+        csvContent += '\r\n';
+        
         // Resumo
-        csvContent += '\nResumo\n';
-        csvContent += `Valor Total Aplicado,${dadosResultadoAtual.valor_total_aplicado.toFixed(2)}\n`;
+        csvContent += `"Resumo";"";""\r\n`;
+        csvContent += `"Valor Total Aplicado";"${dadosResultadoAtual.valor_total_aplicado.toFixed(2).replace('.', ',')}";"";\r\n`;
         
         if (isJurosSaque) {
-            csvContent += `Total de Juros de Saque,${dadosResultadoAtual.total_juros_saque.toFixed(2)}\n`;
-            csvContent += `Taxa de Juros de Saque,${dadosResultadoAtual.taxa_juros_saque.toFixed(2)}% ao mês\n`;
+            csvContent += `"Total de Juros de Saque";"${dadosResultadoAtual.total_juros_saque.toFixed(2).replace('.', ',')}";"";\r\n`;
+            csvContent += `"Taxa de Juros de Saque";"${dadosResultadoAtual.taxa_juros_saque.toFixed(2).replace('.', ',')}% ao mês";"";\r\n`;
         } else {
-            csvContent += `Total de Rendimentos,${dadosResultadoAtual.total_rendimento.toFixed(2)}\n`;
+            csvContent += `"Total de Rendimentos";"${dadosResultadoAtual.total_rendimento.toFixed(2).replace('.', ',')}";"";\r\n`;
         }
         
-        csvContent += `Taxa CDI Utilizada,${dadosResultadoAtual.taxa_cdi_utilizada.toFixed(2)}% ao ano\n`;
-        csvContent += `Percentual sobre CDI,${dadosResultadoAtual.percentual_sobre_cdi.toFixed(2)}%\n`;
-        csvContent += `Data do Cálculo,${dadosResultadoAtual.data_calculo}\n`;
+        csvContent += `"Taxa CDI Utilizada";"${dadosResultadoAtual.taxa_cdi_utilizada.toFixed(2).replace('.', ',')}% ao ano";"";\r\n`;
+        csvContent += `"Percentual sobre CDI";"${dadosResultadoAtual.percentual_sobre_cdi.toFixed(2).replace('.', ',')}%";"";\r\n`;
+        csvContent += `"Data do Cálculo";"${dadosResultadoAtual.data_calculo}";"";\r\n`;
         
-        // Craia o link para download
+        // Cria o link para download
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
