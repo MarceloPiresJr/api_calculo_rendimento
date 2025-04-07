@@ -1,11 +1,7 @@
-import uvicorn
-import os
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.interfaces.api.controllers import router as api_router
+import os
 
 # Obter o tipo de app da variável de ambiente
 app_type = os.environ.get("APP_TYPE", "api")
@@ -42,13 +38,7 @@ def create_api() -> FastAPI:
     # Adiciona as rotas da API
     app.include_router(api_router, prefix="/api/v1")
     
-    # Aqui poderiam ser adicionados middlewares, eventos, etc.
-    
     return app
 
-
 # Instância da aplicação para ser usada pelo servidor ASGI
-if app_type == "static":
-    app = static_app  # Aplicativo para servir o site
-else:
-    app = create_api() 
+app = create_api()
