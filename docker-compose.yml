@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - LANG=pt_BR.UTF-8
+      - LC_ALL=pt_BR.UTF-8
+    restart: unless-stopped

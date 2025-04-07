@@ -21,13 +21,13 @@ src/
 │   └── converters/          # Conversores entre domínio e DTOs
 └── presentation/            # Camada de apresentação (FastAPI)
 
-docker/                      # Arquivos para containerização
-├── dockerfile               # Configuração do container
-└── docker-compose.yml       # Configuração do ambiente
-
+docker/                      # Arquivos para containerização (cópias de backup)
 tests/                       # Testes automatizados
 ├── unit/                    # Testes unitários
 └── integration/             # Testes de integração
+
+Dockerfile                   # Arquivo de configuração do Docker
+docker-compose.yml           # Arquivo de configuração do Docker Compose
 ```
 
 ### Camadas e Responsabilidades
@@ -69,7 +69,6 @@ tests/                       # Testes automatizados
 ### Com Docker
 
 ```
-cd docker
 docker-compose up
 ```
 
