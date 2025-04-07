@@ -1,78 +1,52 @@
 import uvicorn
 import os
 from dotenv import load_dotenv
-from src.presentation.api import app
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from src.presentation.api import app as api_app  # Importar o app já criado
 
-# Carregar variáveis de ambiente do arquivo .env (se existir)
+# Carregar variáveis de ambiente
 load_dotenv()
 
-# Obter o tipo de app da variável de ambiente
-app_type = os.environ.get("APP_TYPE", "api")
-
-def create_api() -> FastAPI:
-    """
-    Cria e configura a aplicação FastAPI.
+# Criar app para servir arquivos estáticos
+def create_static_app():
+    static_app = FastAPI(title="Calculadora de Rendimentos - Site")
     
-    Returns:
-        FastAPI: Aplicação configurada com rotas e middlewares
-    """
-    # Cria a aplicação FastAPI com configurações
-    app = FastAPI(
-        title="API de Cálculo de Rendimentos",
-        description="API para cálculo de rendimentos financeiros com base em CDI",
-        version="1.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
-    )
-    
-    # Configuração de CORS para permitir requisições do frontend
-    app.add_middleware(
+    # Configuração de CORS
+    static_app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "https://web-calculo-rendimento.onrender.com",  # URL específica do seu site
-            "http://localhost:8080",  # Para desenvolvimento local
-            "*"  # Opcional: permite todas as origens
-        ],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
     
-    # Adiciona as rotas da API
-    app.include_router(api_router, prefix="/api/v1")
+    # Monta os arquivos estáticos da pasta web/assets
+    static_app.mount("/assets", StaticFiles(directory="web/assets"), name="assets")
     
-    # Aqui poderiam ser adicionados middlewares, eventos, etc.
+    # Rota para a página inicial e qualquer outra rota
+    @static_app.get("/{full_path:path}")
+    async def serve_site(full_path: str = ""):
+        if full_path == "" or not os.path.exists(f"web/{full_path}"):
+            return FileResponse("web/index.html")
+        return FileResponse(f"web/{full_path}")
     
-    return app
+    return static_app
 
-# Instância da aplicação para ser usada pelo servidor ASGI
+# Escolher o app com base na variável de ambiente
+app_type = os.environ.get("APP_TYPE", "api")
 if app_type == "static":
-    from static_server import app as static_app
-    app = static_app  # Aplicativo para servir o site
+    app = create_static_app()
 else:
-    app = create_api()
-
-# Monta os arquivos estáticos da pasta web/assets
-app.mount("/assets", StaticFiles(directory="web/assets"), name="assets")
-
-# Rota para a página inicial e qualquer outra rota (SPA)
-@app.get("/{full_path:path}")
-async def serve_site(full_path: str = ""):
-    # Se for a raiz ou um caminho que não existe, retorne o index.html
-    if full_path == "" or not os.path.exists(f"web/{full_path}"):
-        return FileResponse("web/index.html")
-    # Caso contrário, retorne o arquivo solicitado
-    return FileResponse(f"web/{full_path}")
+    app = api_app  # Usar o app já criado em api.py
 
 if __name__ == "__main__":
-    # Obter a porta da variável de ambiente (para Render) ou usar 8000 como padrão
+    # Obter a porta da variável de ambiente
     port = int(os.environ.get("PORT", 8000))
     
-    # Obter o host da variável de ambiente ou usar 0.0.0.0 como padrão
+    # Obter o host da variável de ambiente
     host = os.environ.get("HOST", "0.0.0.0")
     
     uvicorn.run(
