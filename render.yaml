@@ -1,0 +1,31 @@
+# Arquivo de configuração Render Blueprint
+# Define serviços e suas conexões
+
+services:
+  # API de Cálculo de Rendimento (Backend)
+  - type: web
+    name: api-calculo-rendimento
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+    healthCheckPath: /api/v1/health
+    
+  # Site de Cálculo de Rendimento (Frontend)
+  - type: web
+    name: site-calculo-rendimento
+    env: static
+    plan: free
+    buildCommand: echo "Static site, no build needed"
+    staticPublishPath: ./web
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 

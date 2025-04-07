@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Rendimentos Financeiros</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💰</text></svg>">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-calculator"></i> Calculadora de Rendimentos
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Parâmetros de Cálculo</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="calculoForm">
+                            <div class="mb-3">
+                                <label for="valorInicial" class="form-label">Valor Inicial (R$)</label>
+                                <input type="number" class="form-control" id="valorInicial" min="0" step="100" value="10000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="aporteMensal" class="form-label">Aporte Mensal (R$)</label>
+                                <input type="number" class="form-control" id="aporteMensal" min="0" step="100" value="1000" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="anoFinal" class="form-label">Ano Final</label>
+                                <input type="number" class="form-control" id="anoFinal" min="2024" step="1" value="2025" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="mesFinal" class="form-label">Mês Final</label>
+                                <select class="form-select" id="mesFinal" required>
+                                    <option value="1">Janeiro</option>
+                                    <option value="2">Fevereiro</option>
+                                    <option value="3">Março</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Maio</option>
+                                    <option value="6">Junho</option>
+                                    <option value="7">Julho</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Setembro</option>
+                                    <option value="10">Outubro</option>
+                                    <option value="11">Novembro</option>
+                                    <option value="12">Dezembro</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="taxaCDI" class="form-label">
+                                    Taxa CDI Anual (%)
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarCDI">
+                                        <i class="bi bi-arrow-repeat"></i> Atualizar
+                                    </button>
+                                </label>
+                                <input type="number" class="form-control" id="taxaCDI" min="0" step="0.01" value="13.25" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="percentualCDI" class="form-label">Percentual sobre CDI (%)</label>
+                                <input type="number" class="form-control" id="percentualCDI" min="0" step="1" value="100" required>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" id="btnCalcular">
+                                    <i class="bi bi-calculator"></i> Calcular Rendimento
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="btnCalcularJuros">
+                                    <i class="bi bi-cash-stack"></i> Calcular Juros de Saque
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Resumo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="resumoContainer" class="d-none">
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <div class="text-muted small">Total Investido</div>
+                                    <div class="h5" id="totalInvestido">-</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">Total de Rendimentos</div>
+                                    <div class="h5 text-success" id="totalRendimentos">-</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="text-muted small">Taxa CDI Utilizada</div>
+                                    <div class="h6" id="taxaCdiUtilizada">-</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-muted small">% Sobre CDI</div>
+                                    <div class="h6" id="percentualCdiUtilizado">-</div>
+                                </div>
+                            </div>
+                            <div class="row mt-2 d-none" id="taxaJurosRow">
+                                <div class="col-12">
+                                    <div class="text-muted small">Taxa de Juros de Saque</div>
+                                    <div class="h6" id="taxaJurosSaque">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0" id="resultadoTitulo">Resultados</h5>
+                        <button class="btn btn-sm btn-light" id="btnExportar" disabled>
+                            <i class="bi bi-download"></i> Exportar CSV
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="loadingIndicator" class="text-center py-5 d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Carregando...</span>
+                            </div>
+                            <p class="mt-2">Calculando, por favor aguarde...</p>
+                        </div>
+                        <div id="resultadoContainer" class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Mês/Ano</th>
+                                        <th>Valor Total</th>
+                                        <th id="colunaDinamica">Rendimento</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultadoTabela">
+                                    <tr>
+                                        <td colspan="3" class="text-center">
+                                            Preencha os parâmetros e clique em Calcular para ver os resultados.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-5 py-3 bg-light">
+        <div class="container text-center">
+            <p class="mb-0 text-muted">
+                Calculadora de Rendimentos Financeiros - API de Cálculo de Rendimentos
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+</html> 

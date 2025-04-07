@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.interfaces.api.controllers import router as api_router
 
 
@@ -16,6 +17,15 @@ def create_api() -> FastAPI:
         version="1.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
+    )
+    
+    # Configuração de CORS para permitir requisições do frontend
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Em produção, isso deve ser restrito a origens específicas
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
     
     # Adiciona as rotas da API
