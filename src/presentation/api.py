@@ -41,4 +41,7 @@ def create_api() -> FastAPI:
 
 
 # Instância da aplicação para ser usada pelo servidor ASGI
-app = create_api() 
+if app_type == "static":
+    app = static_app  # Aplicativo para servir o site
+else:
+    app = create_api() 
