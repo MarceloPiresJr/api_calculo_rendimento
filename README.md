@@ -100,8 +100,8 @@ Para instruções mais detalhadas, consulte o [README do site](web/README.md).
 ### Calcular Rendimento
 `POST /api/v1/calcular_rendimento`
 
-### Calcular Juros de Saque
-`POST /api/v1/calcular_juros_saque`
+### Calcular Impostos de Resgate
+`POST /api/v1/calcular_resgate`
 
 ### Obter CDI Atual
 `GET /api/v1/cdi_atual`

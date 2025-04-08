@@ -24,7 +24,7 @@ export const API = {
         const baseUrl = this.getBaseUrl();
         this.endpoints = {
             calcularRendimento: `${baseUrl}/calcular_rendimento`,
-            calcularJurosSaque: `${baseUrl}/calcular_juros_saque`,
+            calcularResgate: `${baseUrl}/calcular_resgate`,
             cdiAtual: `${baseUrl}/cdi_atual`
         };
     },

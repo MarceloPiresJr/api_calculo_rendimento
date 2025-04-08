@@ -91,7 +91,7 @@ class CalculoRendimentoResponseDTO(BaseModel):
 
 
 class CalculoJurosSaqueRequestDTO(BaseModel):
-    """DTO para receber dados da requisição de cálculo de juros de saque"""
+    """DTO para receber dados da requisição de cálculo de resgate"""
     valor_inicial: float = Field(..., 
         description="Valor inicial do investimento", 
         gt=0,
@@ -116,9 +116,12 @@ class CalculoJurosSaqueRequestDTO(BaseModel):
         description="Percentual sobre o CDI (ex: 100% = CDI puro, 120% = CDI + 20%)",
         ge=0,
         example=100.0)
-    taxa_juros_saque: Optional[float] = Field(1.0, 
-        description="Taxa de juros mensal para saque em percentual",
-        example=1.0)
+    considerar_ir: Optional[bool] = Field(True,
+        description="Se deve considerar o Imposto de Renda no cálculo",
+        example=True)
+    considerar_iof: Optional[bool] = Field(True,
+        description="Se deve considerar o IOF para resgates em menos de 30 dias",
+        example=True)
     
     @validator('valor_inicial')
     def validar_valor_inicial(cls, v):
@@ -133,46 +136,43 @@ class CalculoJurosSaqueRequestDTO(BaseModel):
             raise ValueError(f"O ano final deve ser igual ou posterior a {ano_atual}")
         return v
     
-    @validator('taxa_juros_saque')
-    def validar_taxa_juros_saque(cls, v):
-        if v is not None and v < 0:
-            raise ValueError("A taxa de juros de saque não pode ser negativa")
-        return v
-    
     class Config:
-        title = "Parâmetros para Cálculo de Juros de Saque"
-        description = "Dados necessários para calcular os juros que seriam pagos para sacar o dinheiro"
+        title = "Parâmetros para Cálculo de Resgate"
+        description = "Dados necessários para calcular os impostos e valores líquidos de resgate"
 
 
-class InformeJurosSaqueDTO(BaseModel):
-    """DTO para representar um item do informe mensal de juros de saque"""
+class InformeResgateDTO(BaseModel):
+    """DTO para representar um item do informe mensal de resgate"""
     mes_ano: str = Field(..., 
         description="Mês e ano no formato 'mês/ano'",
         example="janeiro/2024")
     valor_total: float = Field(..., 
         description="Valor total acumulado no período",
         example=11112.50)
-    juros_saque_mensal: float = Field(..., 
-        description="Juros que seriam pagos para saque no mês",
+    imposto_resgate: float = Field(..., 
+        description="Impostos que seriam pagos no resgate (IR + IOF)",
         example=111.13)
+    aliquota_ir: float = Field(...,
+        description="Alíquota de IR aplicada no período (%)",
+        example=22.5)
     
     class Config:
-        title = "Informe Mensal de Juros de Saque"
-        description = "Dados de juros mensais para saque do investimento"
+        title = "Informe Mensal de Resgate"
+        description = "Dados de impostos mensais para resgate do investimento"
 
 
-class CalculoJurosSaqueResponseDTO(BaseModel):
-    """DTO para enviar resultado do cálculo de juros de saque"""
-    informe_mensal: List[InformeJurosSaqueDTO] = Field(..., 
-        description="Lista de informes mensais com valores e juros de saque")
-    total_juros_saque: float = Field(..., 
-        description="Valor total de juros de saque no período",
+class CalculoResgateResponseDTO(BaseModel):
+    """DTO para enviar resultado do cálculo de resgate"""
+    informe_mensal: List[InformeResgateDTO] = Field(..., 
+        description="Lista de informes mensais com valores e impostos de resgate")
+    total_impostos: float = Field(..., 
+        description="Valor total de impostos no período",
         example=5250.75)
     rendimento_liquido: float = Field(...,
-        description="Valor total dos rendimentos menos os juros de saque",
+        description="Valor total dos rendimentos menos os impostos",
         example=7250.25)
     rendimento_bruto: float = Field(...,
-        description="Valor total dos rendimentos antes do desconto dos juros de saque",
+        description="Valor total dos rendimentos antes do desconto dos impostos",
         example=12501.00)
     valor_total_aplicado: float = Field(..., 
         description="Valor total investido (inicial + aportes)",
@@ -183,13 +183,16 @@ class CalculoJurosSaqueResponseDTO(BaseModel):
     percentual_sobre_cdi: float = Field(..., 
         description="Percentual sobre o CDI utilizado no cálculo",
         example=100.0)
-    taxa_juros_saque: float = Field(..., 
-        description="Taxa de juros mensal para saque utilizada no cálculo",
-        example=1.0)
+    considera_ir: bool = Field(...,
+        description="Se o cálculo considerou o Imposto de Renda",
+        example=True)
+    considera_iof: bool = Field(...,
+        description="Se o cálculo considerou o IOF",
+        example=True)
     data_calculo: str = Field(..., 
         description="Data e hora do cálculo no formato DD/MM/AAAA HH:MM",
         example="15/07/2024 10:30")
     
     class Config:
-        title = "Resultado do Cálculo de Juros de Saque"
-        description = "Resultado detalhado do cálculo de juros para saque do investimento" 
+        title = "Resultado do Cálculo de Resgate"
+        description = "Resultado detalhado do cálculo de impostos e valores líquidos para resgate do investimento" 

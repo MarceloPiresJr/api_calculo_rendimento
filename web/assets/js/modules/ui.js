@@ -25,7 +25,7 @@ export const UI = {
             
             // Botões
             btnCalcular: document.getElementById('btnCalcular'),
-            btnCalcularJuros: document.getElementById('btnCalcularJuros'),
+            btnCalcularResgate: document.getElementById('btnCalcularResgate'),
             btnBuscarCDI: document.getElementById('btnBuscarCDI'),
             btnExportar: document.getElementById('btnExportar'),
             
@@ -59,7 +59,7 @@ export const UI = {
      */
     setupEventListeners() {
         this.elements.btnCalcular.addEventListener('click', () => Calculadora.calcularRendimento());
-        this.elements.btnCalcularJuros.addEventListener('click', () => Calculadora.calcularJurosSaque());
+        this.elements.btnCalcularResgate.addEventListener('click', () => Calculadora.calcularResgate());
         this.elements.btnBuscarCDI.addEventListener('click', () => Calculadora.buscarTaxaCDI());
         this.elements.btnExportar.addEventListener('click', () => Exportador.exportarCSV());
         
@@ -85,7 +85,7 @@ export const UI = {
         this.elements.loadingIndicator.classList.toggle('d-none', !mostrar);
         this.elements.resultadoContainer.classList.toggle('d-none', mostrar);
         this.elements.btnCalcular.disabled = mostrar;
-        this.elements.btnCalcularJuros.disabled = mostrar;
+        this.elements.btnCalcularResgate.disabled = mostrar;
     },
     
     /**
@@ -95,7 +95,7 @@ export const UI = {
     mostrarErro(mensagem) {
         this.elements.resultadoTabela.innerHTML = `
             <tr>
-                <td colspan="3" class="text-danger text-center">
+                <td colspan="4" class="text-danger text-center">
                     <i class="bi bi-exclamation-triangle"></i> ${mensagem}
                 </td>
             </tr>
@@ -113,17 +113,24 @@ export const UI = {
         this.elements.taxaJurosRow.classList.add('d-none');
         this.elements.rendimentoLiquidoRow.classList.add('d-none');
         this.elements.rendimentoBrutoRow.classList.add('d-none');
+        
+        // Esconde a coluna de alíquota
+        document.getElementById('colunaTaxa').classList.add('d-none');
     },
     
     /**
-     * Prepara a UI para exibir resultados de juros de saque
+     * Prepara a UI para exibir resultados de resgate
      */
-    prepararParaJurosSaque() {
-        this.elements.colunaDinamica.textContent = 'Juros de Saque';
-        this.elements.resultadoTitulo.textContent = 'Resultados de Juros de Saque';
+    prepararParaResgate() {
+        this.elements.colunaDinamica.textContent = 'Impostos de Resgate';
+        this.elements.resultadoTitulo.textContent = 'Resultados de Resgate com Impostos';
         this.elements.taxaJurosRow.classList.remove('d-none');
         this.elements.rendimentoLiquidoRow.classList.remove('d-none');
         this.elements.rendimentoBrutoRow.classList.remove('d-none');
+        
+        // Mostra a coluna de alíquota
+        document.getElementById('colunaTaxa').classList.remove('d-none');
+        document.getElementById('colunaTaxa').textContent = 'Alíquota IR';
     },
     
     /**
@@ -137,11 +144,13 @@ export const UI = {
         if (!dados || dados.length === 0) {
             this.elements.resultadoTabela.innerHTML = `
                 <tr>
-                    <td colspan="3" class="text-center">Nenhum resultado encontrado</td>
+                    <td colspan="4" class="text-center">Nenhum resultado encontrado</td>
                 </tr>
             `;
             return;
         }
+        
+        const isResgate = campoValor === 'imposto_resgate';
         
         dados.forEach(item => {
             const tr = document.createElement('tr');
@@ -150,12 +159,21 @@ export const UI = {
             const valorTotal = Formatador.formatarMoeda(item.valor_total);
             const valorDinamico = Formatador.formatarMoeda(item[campoValor]);
             
-            tr.innerHTML = `
+            // HTML base para linha
+            let html = `
                 <td>${item.mes_ano}</td>
                 <td class="valor-monetario">${valorTotal}</td>
                 <td class="valor-monetario ${campoValor === 'rendimento_mensal' ? 'text-success' : 'text-danger'}">${valorDinamico}</td>
             `;
             
+            // Adiciona coluna de alíquota se for resgate
+            if (isResgate) {
+                html += `<td>${item.aliquota_ir}%</td>`;
+            } else {
+                html += `<td class="d-none">-</td>`;
+            }
+            
+            tr.innerHTML = html;
             this.elements.resultadoTabela.appendChild(tr);
         });
     },
@@ -163,18 +181,18 @@ export const UI = {
     /**
      * Atualiza o resumo dos resultados
      * @param {Object} dados - Dados completos retornados pela API
-     * @param {boolean} isJurosSaque - Indica se o cálculo é de juros de saque
+     * @param {boolean} isResgate - Indica se o cálculo é de resgate
      */
-    atualizarResumo(dados, isJurosSaque) {
+    atualizarResumo(dados, isResgate) {
         this.elements.resumoContainer.classList.remove('d-none');
         
         this.elements.totalInvestido.textContent = Formatador.formatarMoeda(dados.valor_total_aplicado);
         
-        if (isJurosSaque) {
-            this.elements.totalRendimentos.textContent = Formatador.formatarMoeda(dados.total_juros_saque);
+        if (isResgate) {
+            this.elements.totalRendimentos.textContent = Formatador.formatarMoeda(dados.total_impostos);
             this.elements.totalRendimentos.classList.remove('text-success');
             this.elements.totalRendimentos.classList.add('text-danger');
-            this.elements.taxaJurosSaque.textContent = `${dados.taxa_juros_saque.toFixed(2)}% ao mês`;
+            this.elements.taxaJurosSaque.textContent = dados.considera_ir ? 'IR e IOF aplicados' : 'Sem impostos';
             this.elements.rendimentoBruto.textContent = Formatador.formatarMoeda(dados.rendimento_bruto);
             this.elements.rendimentoLiquido.textContent = Formatador.formatarMoeda(dados.rendimento_liquido);
             this.elements.rendimentoLiquido.classList.add('text-success');

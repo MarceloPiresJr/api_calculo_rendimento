@@ -4,14 +4,13 @@ from typing import Dict
 from src.interfaces.api.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO,
     CalculoRendimentoResponseDTO,
-    CalculoJurosSaqueRequestDTO,
-    CalculoJurosSaqueResponseDTO
+    CalculoJurosSaqueRequestDTO as CalculoResgateRequestDTO,
+    CalculoResgateResponseDTO
 )
 from src.interfaces.api.dtos.cdi_dtos import TaxaCDIResponseDTO
 
 from src.interfaces.converters.dto_converters import DTOConverter
 from src.application.rendimento_use_case import RendimentoUseCase
-from src.application.juros_saque_use_case import JurosSaqueUseCase
 from src.infrastructure.external.bcb_service import CDIService
 
 
@@ -61,14 +60,14 @@ async def calcular_rendimento(request_dto: CalculoRendimentoRequestDTO) -> Calcu
 
 
 @router.post(
-    "/calcular_juros_saque", 
-    response_model=CalculoJurosSaqueResponseDTO,
-    summary="Calcula juros de saque",
+    "/calcular_resgate", 
+    response_model=CalculoResgateResponseDTO,
+    summary="Calcula impostos de resgate",
     status_code=status.HTTP_200_OK
 )
-async def calcular_juros_saque(request_dto: CalculoJurosSaqueRequestDTO) -> CalculoJurosSaqueResponseDTO:
+async def calcular_resgate(request_dto: CalculoResgateRequestDTO) -> CalculoResgateResponseDTO:
     """
-    Calcula os juros que seriam pagos para sacar o dinheiro a cada mês.
+    Calcula os impostos que seriam pagos para resgatar o dinheiro a cada mês.
     
     Parameters:
     - **valor_inicial**: Valor inicial do investimento
@@ -76,20 +75,22 @@ async def calcular_juros_saque(request_dto: CalculoJurosSaqueRequestDTO) -> Calc
     - **ano_final**: Ano final para o cálculo
     - **mes_final**: Mês final para o cálculo (1-12)
     - **taxa_cdi_anual**: (Opcional) Taxa de CDI anual. Se não fornecida, usa a taxa atual.
-    - **taxa_juros_saque**: (Opcional) Taxa mensal de juros para saque em percentual (padrão: 1%)
+    - **considerar_ir**: (Opcional) Se deve considerar o IR (padrão: True)
+    - **considerar_iof**: (Opcional) Se deve considerar o IOF (padrão: True)
     
     Returns:
-        CalculoJurosSaqueResponseDTO: Detalhes do cálculo, incluindo o informe mensal e totais de juros de saque
+        CalculoResgateResponseDTO: Detalhes do cálculo, incluindo o informe mensal e impostos de resgate
     """
     try:
         # Converte DTO para modelo de domínio
-        parametros_calculo = DTOConverter.to_parametros_juros_saque(request_dto)
+        parametros_calculo = DTOConverter.to_parametros_resgate(request_dto)
         
         # Executa o cálculo usando o caso de uso
-        resultado = JurosSaqueUseCase.calcular_juros_saque(parametros_calculo)
+        from src.application.resgate_use_case import ResgateUseCase
+        resultado = ResgateUseCase.calcular_impostos_resgate(parametros_calculo)
         
         # Converte resultado do domínio para DTO de resposta
-        return DTOConverter.to_juros_saque_response(resultado)
+        return DTOConverter.to_resgate_response(resultado)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 

@@ -104,17 +104,18 @@ class CalculadoraRendimento:
             
         return datetime(ano, mes, 1)
     
-    def calcular_juros_saque(self, taxa_juros_mensal: float = 1.0) -> Tuple[List[Tuple[str, float, float]], float]:
+    def calcular_impostos_resgate(self, considerar_ir: bool = True, considerar_iof: bool = True) -> Tuple[List[Tuple[str, float, float, float]], float]:
         """
-        Calcula os juros que seriam pagos para sacar o dinheiro a cada mês.
+        Calcula os impostos que seriam pagos para resgatar o dinheiro a cada mês.
         
         Args:
-            taxa_juros_mensal: Taxa mensal de juros para saque em percentual (padrão: 1%)
+            considerar_ir: Se deve considerar Imposto de Renda no cálculo
+            considerar_iof: Se deve considerar IOF para resgates em menos de 30 dias
             
         Returns:
             Tupla contendo:
-                - Lista de tuplas (mês/ano, saldo, juros de saque mensal)
-                - Valor total de juros de saque no período
+                - Lista de tuplas (mês/ano, saldo, imposto total, alíquota IR)
+                - Valor total de impostos no período
         """
         # Reset os valores para um novo cálculo
         self.saldo = self.valor_inicial
@@ -124,14 +125,14 @@ class CalculadoraRendimento:
         
         data_atual = self.data_inicial
         
-        # Lista para armazenar os resultados de juros de saque
-        historico_juros_saque = []
+        # Lista para armazenar os resultados de impostos de resgate
+        historico_impostos = []
         
-        # Total de juros que seriam pagos no período
-        total_juros_saque = 0.0
+        # Total de impostos que seriam pagos no período
+        total_impostos = 0.0
         
-        # Converte a taxa de juros para decimal
-        taxa_juros_decimal = taxa_juros_mensal / 100
+        # Controle dos dias decorridos para cálculo das alíquotas de IR e IOF
+        dias_decorridos = 0
         
         while data_atual <= self.data_final:
             # Aplica o rendimento mensal
@@ -141,17 +142,33 @@ class CalculadoraRendimento:
             # Arredonda o saldo para 2 casas decimais
             self.saldo = round(self.saldo, 2)
             
-            # Calcula os juros de saque sobre o saldo atualizado
-            juros_saque_mensal = self.saldo * taxa_juros_decimal
-            juros_saque_mensal = round(juros_saque_mensal, 2)
-            total_juros_saque += juros_saque_mensal
+            # Calcula os dias decorridos para determinação de alíquotas
+            dias_decorridos += 30  # Aproximação - mês comercial de 30 dias
+            
+            # Calcula o lucro sobre o qual incide IR (rendimento)
+            lucro = rendimento
+            
+            # Calcula a alíquota de IR com base no prazo
+            aliquota_ir = self._calcular_aliquota_ir(dias_decorridos) if considerar_ir else 0
+            
+            # Calcula o valor do IR
+            imposto_renda = lucro * (aliquota_ir / 100) if considerar_ir else 0
+            
+            # Calcula o IOF (apenas para resgates até 30 dias)
+            iof = self._calcular_iof(dias_decorridos, lucro) if considerar_iof else 0
+            
+            # Imposto total
+            imposto_total = imposto_renda + iof
+            imposto_total = round(imposto_total, 2)
+            total_impostos += imposto_total
             
             # Armazena os dados do mês
             mes_ano = data_atual.strftime('%m/%Y')
-            historico_juros_saque.append((
+            historico_impostos.append((
                 mes_ano,
                 self.saldo,
-                juros_saque_mensal
+                imposto_total,
+                aliquota_ir
             ))
             
             # Avança para o próximo mês
@@ -165,10 +182,59 @@ class CalculadoraRendimento:
                 if not (eh_primeiro_mes and self.valor_inicial > 0):
                     self.saldo += self.aporte_mensal
         
-        # Arredonda o total de juros para 2 casas decimais
-        total_juros_saque = round(total_juros_saque, 2)
+        # Arredonda o total de impostos para 2 casas decimais
+        total_impostos = round(total_impostos, 2)
         
-        return historico_juros_saque, total_juros_saque
+        return historico_impostos, total_impostos
+    
+    def _calcular_aliquota_ir(self, dias_decorridos: int) -> float:
+        """
+        Calcula a alíquota de IR com base no tempo do investimento.
+        
+        Args:
+            dias_decorridos: Dias decorridos desde o início do investimento
+            
+        Returns:
+            Alíquota de IR em percentual
+        """
+        # Alíquotas regressivas de IR para investimentos em Renda Fixa (em %)
+        if dias_decorridos <= 180:  # Até 180 dias
+            return 22.5
+        elif dias_decorridos <= 360:  # De 181 a 360 dias
+            return 20.0
+        elif dias_decorridos <= 720:  # De 361 a 720 dias
+            return 17.5
+        else:  # Acima de 720 dias
+            return 15.0
+    
+    def _calcular_iof(self, dias_decorridos: int, rendimento: float) -> float:
+        """
+        Calcula o IOF com base no tempo do investimento e no rendimento.
+        IOF é cobrado apenas nos primeiros 30 dias, com alíquotas regressivas.
+        
+        Args:
+            dias_decorridos: Dias decorridos desde o início do investimento
+            rendimento: Rendimento sobre o qual incide o IOF
+            
+        Returns:
+            Valor do IOF
+        """
+        # IOF só é cobrado nos primeiros 30 dias
+        if dias_decorridos > 30:
+            return 0.0
+        
+        # Tabela regressiva de IOF
+        aliquotas_iof = [
+            96, 93, 90, 86, 83, 80, 76, 73, 70, 66, 63, 60, 56, 53, 50, 46, 
+            43, 40, 36, 33, 30, 26, 23, 20, 16, 13, 10, 6, 3, 0
+        ]
+        
+        # A posição no array é o dia - 1 (pois o array começa em 0)
+        # Limitamos a 29 para evitar acesso fora do array
+        dia_indice = min(dias_decorridos - 1, 29)
+        aliquota = aliquotas_iof[dia_indice] / 100
+        
+        return rendimento * aliquota
     
     def obter_saldo_final(self) -> float:
         """Retorna o saldo final após o cálculo."""

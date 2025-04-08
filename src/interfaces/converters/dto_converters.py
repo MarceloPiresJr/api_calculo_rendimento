@@ -5,19 +5,19 @@ from src.interfaces.api.dtos.rendimento_dtos import (
     CalculoRendimentoRequestDTO, 
     CalculoRendimentoResponseDTO,
     InformeRendimentoDTO,
-    CalculoJurosSaqueRequestDTO,
-    CalculoJurosSaqueResponseDTO,
-    InformeJurosSaqueDTO
+    CalculoJurosSaqueRequestDTO as CalculoResgateRequestDTO,
+    CalculoResgateResponseDTO,
+    InformeResgateDTO
 )
 from src.interfaces.api.dtos.cdi_dtos import TaxaCDIResponseDTO
 
 from src.domain.entities.models import (
     ParametrosCalculoRendimento,
-    ParametrosCalculoJurosSaque,
+    ParametrosCalculoJurosSaque as ParametrosCalculoResgate,
     InformeRendimentoMensal,
-    InformeJurosSaqueMensal,
+    InformeResgateMensal,
     ResultadoCalculoRendimento,
-    ResultadoCalculoJurosSaque
+    ResultadoCalculoResgate
 )
 
 
@@ -48,24 +48,25 @@ class DTOConverter:
         )
     
     @staticmethod
-    def to_parametros_juros_saque(dto: CalculoJurosSaqueRequestDTO) -> ParametrosCalculoJurosSaque:
+    def to_parametros_resgate(dto: CalculoResgateRequestDTO) -> ParametrosCalculoResgate:
         """
-        Converte um DTO de requisição para o modelo de parâmetros de cálculo de juros de saque.
+        Converte um DTO de requisição para o modelo de parâmetros de cálculo de resgate.
         
         Args:
-            dto: DTO da requisição de cálculo de juros
+            dto: DTO da requisição de cálculo de resgate
             
         Returns:
-            Modelo de domínio com os parâmetros de cálculo de juros
+            Modelo de domínio com os parâmetros de cálculo de resgate
         """
-        return ParametrosCalculoJurosSaque(
+        return ParametrosCalculoResgate(
             valor_inicial=dto.valor_inicial,
             aporte_mensal=dto.aporte_mensal,
             ano_final=dto.ano_final,
             mes_final=dto.mes_final,
             taxa_cdi_anual=dto.taxa_cdi_anual,
             percentual_sobre_cdi=dto.percentual_sobre_cdi or 100.0,
-            taxa_juros_saque=dto.taxa_juros_saque or 1.0
+            considerar_ir=dto.considerar_ir,
+            considerar_iof=dto.considerar_iof
         )
     
     @staticmethod
@@ -100,36 +101,38 @@ class DTOConverter:
         )
     
     @staticmethod
-    def to_juros_saque_response(resultado: ResultadoCalculoJurosSaque) -> CalculoJurosSaqueResponseDTO:
+    def to_resgate_response(resultado: ResultadoCalculoResgate) -> CalculoResgateResponseDTO:
         """
-        Converte um resultado de cálculo de juros de saque do domínio para o DTO de resposta da API.
+        Converte um resultado de cálculo de resgate do domínio para o DTO de resposta da API.
         
         Args:
-            resultado: Resultado de cálculo de juros de saque do domínio
+            resultado: Resultado de cálculo de resgate do domínio
             
         Returns:
             DTO formatado para resposta da API
         """
         # Converte informes mensais
         informes_dto = [
-            InformeJurosSaqueDTO(
+            InformeResgateDTO(
                 mes_ano=informe.mes_ano_formatado,
                 valor_total=round(informe.saldo, 2),
-                juros_saque_mensal=round(informe.juros_saque, 2)
+                imposto_resgate=round(informe.imposto, 2),
+                aliquota_ir=informe.aliquota_ir
             )
             for informe in resultado.informes_mensais
         ]
         
         # Monta o DTO de resposta
-        return CalculoJurosSaqueResponseDTO(
+        return CalculoResgateResponseDTO(
             informe_mensal=informes_dto,
-            total_juros_saque=round(resultado.total_juros_saque, 2),
+            total_impostos=round(resultado.total_impostos, 2),
             rendimento_liquido=round(resultado.rendimento_liquido, 2),
             rendimento_bruto=round(resultado.rendimento_bruto, 2),
             valor_total_aplicado=round(resultado.valor_total_aplicado, 2),
             taxa_cdi_utilizada=resultado.taxa_cdi_utilizada,
             percentual_sobre_cdi=resultado.percentual_sobre_cdi,
-            taxa_juros_saque=resultado.taxa_juros_saque,
+            considera_ir=resultado.considera_ir,
+            considera_iof=resultado.considera_iof,
             data_calculo=resultado.data_calculo_formatada
         )
     
@@ -180,28 +183,29 @@ class DTOConverter:
         return informes
     
     @staticmethod
-    def tuplas_to_informes_juros_saque(
+    def tuplas_to_informes_resgate(
         tuplas_resultado: List[tuple]
-    ) -> List[InformeJurosSaqueMensal]:
+    ) -> List[InformeResgateMensal]:
         """
-        Converte as tuplas de resultado do calculador para objetos de domínio de juros de saque.
+        Converte as tuplas de resultado do calculador para objetos de domínio de resgate.
         
         Args:
-            tuplas_resultado: Lista de tuplas (mes_ano, saldo, juros_saque)
+            tuplas_resultado: Lista de tuplas (mes_ano, saldo, imposto, aliquota_ir)
             
         Returns:
-            Lista de objetos InformeJurosSaqueMensal
+            Lista de objetos InformeResgateMensal
         """
         informes = []
         
-        for mes_ano, saldo, juros_saque in tuplas_resultado:
+        for mes_ano, saldo, imposto, aliquota_ir in tuplas_resultado:
             mes, ano = map(int, mes_ano.split('/'))
             data = datetime(ano, mes, 1)
             
-            informe = InformeJurosSaqueMensal(
+            informe = InformeResgateMensal(
                 data=data,
                 saldo=saldo,
-                juros_saque=juros_saque
+                imposto=imposto,
+                aliquota_ir=aliquota_ir
             )
             
             informes.append(informe)

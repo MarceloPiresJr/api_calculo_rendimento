@@ -41,19 +41,20 @@ export const Calculadora = {
     },
     
     /**
-     * Calcula os juros de saque usando a API
+     * Calcula os impostos de resgate usando a API
      */
-    async calcularJurosSaque() {
+    async calcularResgate() {
         if (!Validador.validarFormulario()) return;
         
         try {
             UI.mostrarLoading(true);
-            UI.prepararParaJurosSaque();
+            UI.prepararParaResgate();
             
             const params = Validador.obterParametrosFormulario();
-            params.taxa_juros_saque = 1.0; // Valor padrão
+            params.considerar_ir = true;  // Valores padrão
+            params.considerar_iof = true;
             
-            const dados = await API.fetch(API.endpoints.calcularJurosSaque, {
+            const dados = await API.fetch(API.endpoints.calcularResgate, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(params)
@@ -61,7 +62,7 @@ export const Calculadora = {
             
             this.resultadoAtual = dados;
             
-            UI.preencherTabelaResultados(dados.informe_mensal, 'juros_saque_mensal');
+            UI.preencherTabelaResultados(dados.informe_mensal, 'imposto_resgate');
             UI.atualizarResumo(dados, true);
             UI.elements.btnExportar.disabled = false;
             
