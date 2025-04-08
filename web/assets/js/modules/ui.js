@@ -36,6 +36,10 @@ export const UI = {
             resumoContainer: document.getElementById('resumoContainer'),
             totalInvestido: document.getElementById('totalInvestido'),
             totalRendimentos: document.getElementById('totalRendimentos'),
+            rendimentoBruto: document.getElementById('rendimentoBruto'),
+            rendimentoBrutoRow: document.getElementById('rendimentoBrutoRow'),
+            rendimentoLiquido: document.getElementById('rendimentoLiquido'),
+            rendimentoLiquidoRow: document.getElementById('rendimentoLiquidoRow'),
             taxaCdiUtilizada: document.getElementById('taxaCdiUtilizada'),
             percentualCdiUtilizado: document.getElementById('percentualCdiUtilizado'),
             taxaJurosSaque: document.getElementById('taxaJurosSaque'),
@@ -107,6 +111,8 @@ export const UI = {
         this.elements.colunaDinamica.textContent = 'Rendimento';
         this.elements.resultadoTitulo.textContent = 'Resultados de Rendimentos';
         this.elements.taxaJurosRow.classList.add('d-none');
+        this.elements.rendimentoLiquidoRow.classList.add('d-none');
+        this.elements.rendimentoBrutoRow.classList.add('d-none');
     },
     
     /**
@@ -116,6 +122,8 @@ export const UI = {
         this.elements.colunaDinamica.textContent = 'Juros de Saque';
         this.elements.resultadoTitulo.textContent = 'Resultados de Juros de Saque';
         this.elements.taxaJurosRow.classList.remove('d-none');
+        this.elements.rendimentoLiquidoRow.classList.remove('d-none');
+        this.elements.rendimentoBrutoRow.classList.remove('d-none');
     },
     
     /**
@@ -167,6 +175,9 @@ export const UI = {
             this.elements.totalRendimentos.classList.remove('text-success');
             this.elements.totalRendimentos.classList.add('text-danger');
             this.elements.taxaJurosSaque.textContent = `${dados.taxa_juros_saque.toFixed(2)}% ao mês`;
+            this.elements.rendimentoBruto.textContent = Formatador.formatarMoeda(dados.rendimento_bruto);
+            this.elements.rendimentoLiquido.textContent = Formatador.formatarMoeda(dados.rendimento_liquido);
+            this.elements.rendimentoLiquido.classList.add('text-success');
         } else {
             this.elements.totalRendimentos.textContent = Formatador.formatarMoeda(dados.total_rendimento);
             this.elements.totalRendimentos.classList.add('text-success');

@@ -51,6 +51,13 @@ class JurosSaqueUseCase:
         # Calcula valor total aplicado
         valor_total_aplicado = JurosSaqueUseCase._calcular_valor_total_aplicado(parametros)
         
+        # Calcula o rendimento bruto (saldo final - valor aplicado)
+        saldo_final = informes_mensais[-1].saldo if informes_mensais else parametros.valor_inicial
+        rendimento_bruto = saldo_final - valor_total_aplicado
+        
+        # Calcula o rendimento líquido (rendimento bruto - total juros de saque)
+        rendimento_liquido = rendimento_bruto - total_juros_saque
+        
         # Cria e retorna o resultado
         return ResultadoCalculoJurosSaque(
             informes_mensais=informes_mensais,
@@ -58,7 +65,9 @@ class JurosSaqueUseCase:
             valor_total_aplicado=valor_total_aplicado,
             taxa_cdi_utilizada=parametros.taxa_cdi_anual,
             percentual_sobre_cdi=parametros.percentual_sobre_cdi,
-            taxa_juros_saque=parametros.taxa_juros_saque
+            taxa_juros_saque=parametros.taxa_juros_saque,
+            rendimento_liquido=rendimento_liquido,
+            rendimento_bruto=rendimento_bruto
         )
     
     @staticmethod

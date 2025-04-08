@@ -168,6 +168,12 @@ class CalculoJurosSaqueResponseDTO(BaseModel):
     total_juros_saque: float = Field(..., 
         description="Valor total de juros de saque no período",
         example=5250.75)
+    rendimento_liquido: float = Field(...,
+        description="Valor total dos rendimentos menos os juros de saque",
+        example=7250.25)
+    rendimento_bruto: float = Field(...,
+        description="Valor total dos rendimentos antes do desconto dos juros de saque",
+        example=12501.00)
     valor_total_aplicado: float = Field(..., 
         description="Valor total investido (inicial + aportes)",
         example=82000.00)

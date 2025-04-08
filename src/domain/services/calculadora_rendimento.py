@@ -119,9 +119,6 @@ class CalculadoraRendimento:
         # Reset os valores para um novo cálculo
         self.saldo = self.valor_inicial
         
-        # Adiciona o aporte mensal ao saldo inicial conforme expectativa do usuário
-        self.saldo += self.aporte_mensal
-        
         # Valida as datas
         self._validar_datas()
         
@@ -160,9 +157,13 @@ class CalculadoraRendimento:
             # Avança para o próximo mês
             data_atual = self._avancar_para_proximo_mes(data_atual)
             
-            # Adiciona o aporte mensal para o próximo mês
+            # Adiciona o aporte mensal para o próximo mês, usando a mesma lógica do método calcular
             if data_atual <= self.data_final:
-                self.saldo += self.aporte_mensal
+                eh_primeiro_mes = (data_atual.month == self.data_inicial.month and 
+                               data_atual.year == self.data_inicial.year)
+                
+                if not (eh_primeiro_mes and self.valor_inicial > 0):
+                    self.saldo += self.aporte_mensal
         
         # Arredonda o total de juros para 2 casas decimais
         total_juros_saque = round(total_juros_saque, 2)

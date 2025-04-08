@@ -124,6 +124,8 @@ class DTOConverter:
         return CalculoJurosSaqueResponseDTO(
             informe_mensal=informes_dto,
             total_juros_saque=round(resultado.total_juros_saque, 2),
+            rendimento_liquido=round(resultado.rendimento_liquido, 2),
+            rendimento_bruto=round(resultado.rendimento_bruto, 2),
             valor_total_aplicado=round(resultado.valor_total_aplicado, 2),
             taxa_cdi_utilizada=resultado.taxa_cdi_utilizada,
             percentual_sobre_cdi=resultado.percentual_sobre_cdi,

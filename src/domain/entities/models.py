@@ -92,6 +92,8 @@ class ResultadoCalculoJurosSaque:
     informes_mensais: List[InformeJurosSaqueMensal]
     total_juros_saque: float
     valor_total_aplicado: float
+    rendimento_liquido: float
+    rendimento_bruto: float
     data_calculo: Optional[datetime] = None
     
     def __post_init__(self):
